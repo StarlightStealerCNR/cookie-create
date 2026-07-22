@@ -1,0 +1,24 @@
+- An AI Image Generator accessible via a website. It takes two image uploads: a cookie base (a cookie that has already been molded into a specific shape, but without any designs) and a finished cookie illustration. It takes a third input in the form of a text description provided by the user. It uses all three of these inputs to generate potential design ideas using the shape of the given cookie base and the user's artstyle/current drawing skill as deduced from the provided illustration as hard guidelines from which to create the image.
+
+#### Who is it for?
+- The owner of a small business dedicated to shipping cookies with customer-requested designs. They value efficiency in their work.
+
+#### What problems does it solve?
+- The friction that comes with "impossible" cookie designs occasionally generated when using ChatGPT, whether in the cookie's shape (due to the mold being inaccessible to the user) or intricacy of the design (as in, the design not matching the user's art capabilities).
+- It helps by tailoring possible designs to the user's available shapes and current design skills, increasing efficiency for the sake of creation/executing their desired idea without sacrificing extra time and energy on compromising due to the discrepancy between their skill and what the "impossible" images are asking for.
+
+#### Scope
+- Keep it simple. The internet should only be required for the sake of it being a website and what is needed for image generation based on a user-given description. It is up to the user to download the generated images, which are also displayed on the website until it is refreshed.
+- Functions: image upload, text prompt, image output display, UI text for user-friendliness, option to request specific number of images (from 2 to 8)
+- Modular image generation: as in, the process can function with input for only the cookie-base image, only the illustration image, or both, with varying outcomes depending on the situation.
+
+#### Outcomes
+- If no description: give error, ask for description input.
+- If no base and no artstyle: give error, ask for required images.
+- If base but no artstyle: generate images using only consideration for shape of base.
+- If artstyle but no base: generate images using only consideration for artstyle.
+
+#### UI
+- Input buttons for the base and the illustration are presented by two empty boxes with "upload-here" graphics displayed prominently in the center of the webpage. The given images fill the boxes when they are provided.
+- Textbox for user-given description sits below the large input boxes.
+- Output images are displayed in a two-wide grid fashion below the textbox; the boxes are only half as large as the input boxes.

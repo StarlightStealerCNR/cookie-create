@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CookieCreate</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/public/images/favicon-96x96.png"
+      sizes="96x96"
+    />
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg" />
+    <link rel="shortcut icon" href="/public/images/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/public/images/apple-touch-icon.png"
+    />
+    <meta name="apple-mobile-web-app-title" content="CookieCreate" />
+    <link rel="manifest" href="/public/images/site.webmanifest" />
+  </head>
+  <body>
+    <header>
+      <h1>CookieCreate</h1>
+      <p class="subtitle">
+        Upload a reference cookie, describe your ideas, and generate pictures
+        based on the reference's shape and/or artstyle.
+      </p>
+    </header>
+
+    <main>
+      <!-- ── Upload Section ── -->
+      <section class="upload-section">
+        <label class="upload-box" id="upload-label" for="image-input">
+          <span class="upload-placeholder" id="upload-placeholder">
+            <svg
+              class="upload-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span>Upload Image</span>
+            <span class="upload-hint">Click or tap to choose a photo</span>
+          </span>
+          <img
+            class="upload-preview"
+            id="upload-preview"
+            src=""
+            alt="Reference image preview"
+          />
+          <input
+            type="file"
+            id="image-input"
+            accept="image/*"
+            capture="environment"
+          />
+        </label>
+      </section>
+
+      <!-- ── Controls Section ── -->
+      <section class="controls-section">
+        <div class="control-row">
+          <label for="mode">Interpretation mode</label>
+          <select id="mode">
+            <option value="both" selected>Both shape &amp; artstyle</option>
+            <option value="shape">Shape only</option>
+            <option value="artstyle">Artstyle only</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <label for="prompt">Design description</label>
+          <textarea
+            id="prompt"
+            rows="3"
+            placeholder="e.g. A tarantula hiding in a den"
+          ></textarea>
+        </div>
+
+        <div class="control-row control-row--inline">
+          <label for="count"
+            >Number of images (two minimum, eight maximum)</label
+          >
+          <input type="number" id="count" min="2" max="8" value="4" />
+        </div>
+
+        <div id="error-msg" class="error-msg" hidden></div>
+
+        <button id="generate-btn" type="button">Generate</button>
+      </section>
+
+      <!-- ── Output Section ── -->
+      <section class="output-section">
+        <div id="output-grid" class="output-grid"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+
+    <!--hi section -->
+    <p class="hi-r">hi r</p>
+    <p class="hi-j">hi j</p>
+  </body>
+</html>

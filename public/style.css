@@ -1,0 +1,281 @@
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #fdf8f3;
+  color: #2c1a0e;
+  min-height: 100vh;
+  padding: 2rem 1rem 4rem;
+}
+
+/* ── Header ── */
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  margin-top: 0.4rem;
+  color: #7a5c3e;
+  font-size: 0.95rem;
+}
+
+.hi-r {
+  color: #7a5c3e;
+  font-size: 0.5rem;
+}
+
+.hi-j {
+  color: #7a5c3e;
+  font-size: 0.5rem;
+  text-align: right;
+}
+
+/* ── Main layout ── */
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Upload Box ── */
+.upload-section {
+  display: flex;
+  justify-content: center;
+}
+
+.upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 4 / 3;
+  border: 2.5px dashed #c8a882;
+  border-radius: 16px;
+  background: #fff8f0;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.upload-box:hover {
+  border-color: #a0683a;
+  background: #fff3e6;
+}
+
+/* Hide the native file input */
+.upload-box input[type="file"] {
+  display: none;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a0683a;
+  pointer-events: none;
+  padding: 1rem;
+  text-align: center;
+}
+
+.upload-icon {
+  width: 48px;
+  height: 48px;
+  stroke: #c8a882;
+}
+
+.upload-placeholder span {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.upload-hint {
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  color: #b89070;
+}
+
+/* Preview image fills the box */
+.upload-preview {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff8f0;
+}
+
+.upload-preview.visible {
+  display: block;
+}
+
+/* ── Controls ── */
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.control-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7a5c3e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+select,
+textarea,
+input[type="number"] {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid #d4b896;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.95rem;
+  color: #2c1a0e;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+select:focus,
+textarea:focus,
+input[type="number"]:focus {
+  border-color: #a0683a;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.control-row--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.control-row--inline label {
+  white-space: nowrap;
+}
+
+.control-row--inline input[type="number"] {
+  width: 80px;
+}
+
+/* ── Error message ── */
+.error-msg {
+  background: #fff0f0;
+  border: 1.5px solid #f5a0a0;
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+/* ── Generate button ── */
+#generate-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background: #a0683a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+}
+
+#generate-btn:hover:not(:disabled) {
+  background: #7a4e2a;
+}
+
+#generate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Output grid ── */
+.output-section {
+  width: 100%;
+}
+
+.output-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.output-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1.5px solid #d4b896;
+  background: #fff8f0;
+}
+
+/* ── Loading state ── */
+#generate-btn.loading::after {
+  content: " …";
+}
+
+/* ── Mobile (≤ 600px) ── */
+@media (max-width: 600px) {
+  body {
+    padding: 1.2rem 0.75rem 3rem;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  .upload-box {
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+  .output-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .control-row--inline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .control-row--inline input[type="number"] {
+    width: 100%;
+  }
+}
