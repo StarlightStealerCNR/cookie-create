@@ -92,7 +92,7 @@ Build `public/index.html` and `public/style.css` matching the revised UI: one pr
 2. Create the upload box as a `<label>` wrapping a hidden `<input type="file" accept="image/*" capture="environment">` — the `capture="environment"` attribute triggers the native camera/library prompt on mobile.
 3. Add a `<select id="mode">` with options: `shape` ("Shape only"), `artstyle` ("Artstyle only"), `both` ("Both").
 4. Add a `<textarea id="prompt">` for the description.
-5. Add an `<input type="number" min="2" max="8" value="4" id="count">` for image count.
+5. Add an `<input type="number" min="1" max="5" value="4" id="count">` for image count.
 6. Add a `<button id="generate-btn">Generate</button>` and a hidden `<div id="error-msg">`.
 7. Create `public/style.css`: centred upload box at desktop size; two-column CSS Grid for output; output cells roughly half the size of the upload box; `@media (max-width: 600px)` breakpoint stacking everything vertically and collapsing the output to one column.
 8. Create `public/app.js` with a `change` listener on the file input that previews the selected image inside the upload box using `URL.createObjectURL(file)`.
@@ -114,22 +114,24 @@ Implement IP-based rate limiting inside `api/generate.js` so that no single IP a
 
 **Expected Outcomes:**
 
-- Each IP address is limited to a configurable number of `/api/generate` requests per time window (e.g. 10 requests per 15 minutes).
-- Requests exceeding the limit receive a `429 Too Many Requests` response with a plain-English message.
+- Primary layer: Vercel Firewall (configured in Vercel dashboard) blocks abusive traffic before the function is invoked.
+- Secondary layer: Upstash Redis sliding-window counter (10 requests per 15 minutes per IP) — persistent across cold starts and function instances.
+- Requests exceeding the secondary limit receive a `429 Too Many Requests` response with a plain-English message.
 - The static frontend files are unaffected.
 
 **Todo List:**
 
-1. Inside `api/generate.js`, read the requester's IP from the `x-forwarded-for` header (Vercel sets this automatically).
-2. Implement a simple in-memory request counter: a `Map` keyed by IP storing `{ count, windowStart }`.
-3. At the top of the handler, check if the IP has exceeded the limit within the current window; if so, return a `429` with a message.
-4. Reset the counter for an IP once its window has expired.
+1. Use `@upstash/ratelimit` with `Ratelimit.slidingWindow(10, "15 m")` backed by `@upstash/redis` (`Redis.fromEnv()`).
+2. Read requester IP from `x-forwarded-for` header; pass to `ratelimit.limit(ip)`.
+3. Return `429` if `success` is false.
+4. Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.local` and Vercel dashboard.
 5. In `public/app.js` (Sub-Task 5), handle the `429` response by displaying the rate limit message in `#error-msg`.
 
 **Relevant Context:**
 
-- Vercel serverless functions are stateless between invocations — the in-memory `Map` resets on cold starts. This is acceptable for a low-traffic personal tool; the limit is a soft abuse deterrent, not a hard billing control.
-- If stricter limiting is needed later, Vercel's Edge Middleware (a `middleware.js` file at the project root) can enforce limits before the function is even invoked, using Vercel KV as the shared store.
+- `Redis.fromEnv()` automatically reads `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` from environment variables.
+- The sliding window algorithm counts requests in a rolling time window — fairer than a fixed window which can allow bursts at window boundaries.
+- Primary Vercel Firewall rules are configured in the Vercel dashboard (not in code).
 - To swap to a password gate later: replace the rate limit check with a token/session check. No frontend changes beyond adding a login page.
 
 **Status:** `[x] done`
@@ -162,7 +164,7 @@ Implement client-side validation before any API call is made, showing appropriat
 - The mode dropdown always has a valid value (it has a default selection), so it does not need to be validated.
 - The server-side `/generate` handler performs the same checks as a fallback, but the primary UX gatekeeping happens here in the browser.
 
-**Status:** `[ ] pending`
+**Status:** `[x] done`
 
 ---
 
@@ -196,7 +198,7 @@ Wire up the frontend to send validated form data to `POST /generate` and render 
 - The output grid retains images until the page is refreshed (no clear-on-submit).
 - The stub from Sub-Task 1 returns placeholder base64 data so the full UI flow is testable before the Hugging Face call is wired in.
 
-**Status:** `[ ] pending`
+**Status:** `[x] done`
 
 ---
 

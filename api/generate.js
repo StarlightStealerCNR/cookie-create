@@ -1,30 +1,17 @@
 const formidable = require("formidable");
 const generateImages = require("../generator");
+const { Ratelimit } = require("@upstash/ratelimit");
+const { Redis } = require("@upstash/redis");
 
-// ── Rate limiting ──────────────────────────────────────────────────────────
-// In-memory store: Map<ip, { count: number, windowStart: number }>
-// Resets on cold starts — intentional; this is a soft abuse deterrent.
-const RATE_LIMIT_MAX = 10; // requests per window per IP
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes in ms
-const ipStore = new Map();
-
-function isRateLimited(ip) {
-  const now = Date.now();
-  const entry = ipStore.get(ip);
-
-  if (!entry || now - entry.windowStart >= RATE_LIMIT_WINDOW) {
-    // First request or window has expired — start a fresh window
-    ipStore.set(ip, { count: 1, windowStart: now });
-    return false;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return true;
-  }
-
-  entry.count += 1;
-  return false;
-}
+// ── Rate limiting (Upstash Redis — persistent, cross-instance) ────────────
+// Primary layer: Vercel Firewall (configured in Vercel dashboard).
+// Secondary layer: Upstash sliding-window counter, survives cold starts.
+// Requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in env.
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, "15 m"), // 10 requests per 15 minutes per IP
+  analytics: false,
+});
 // ──────────────────────────────────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
@@ -38,7 +25,8 @@ module.exports = async function handler(req, res) {
     req.socket?.remoteAddress ||
     "unknown";
 
-  if (isRateLimited(ip)) {
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
     return res.status(429).json({
       error: "Too many requests — please wait 15 minutes before trying again.",
     });
@@ -59,7 +47,7 @@ module.exports = async function handler(req, res) {
     : fields.prompt;
   const mode = Array.isArray(fields.mode) ? fields.mode[0] : fields.mode;
   const count = Math.min(
-    8,
+    5,
     Math.max(
       1,
       parseInt(
