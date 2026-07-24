@@ -37,8 +37,16 @@ async function generateImages({ image, prompt, mode, count }) {
   // ── Fire `count` sequential requests (one image per call) ────────────────
   const results = [];
 
+  // DNS smoke test — confirm outbound DNS works at all
+  try {
+    const testRes = await fetch('https://huggingface.co', { method: 'HEAD' });
+    console.log(`[generator] DNS smoke test — huggingface.co reachable: ${testRes.status}`);
+  } catch (dnsErr) {
+    console.error(`[generator] DNS smoke test failed:`, dnsErr.cause?.message || dnsErr.message);
+  }
+
   for (let i = 0; i < count; i++) {
-    console.log(`[generator] Request ${i + 1}/${count} — calling HF API...`);
+    console.log(`[generator] Request ${i + 1}/${count} — calling HF API at: ${API_URL}`);
 
     let response;
     try {
