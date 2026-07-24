@@ -38,23 +38,33 @@ async function generateImages({ image, prompt, mode, count }) {
   const results = [];
 
   for (let i = 0; i < count; i++) {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization':    `Bearer ${HF_API_TOKEN}`,
-        'Content-Type':     'application/json',
-        'x-wait-for-model': 'true', // wait if model is loading rather than returning 503
-      },
-      body: JSON.stringify({
-        inputs: imageBase64,
-        parameters: {
-          prompt:               instruction,
-          image_guidance_scale: 1.5, // how closely to follow the reference image
-          guidance_scale:       7.5, // how closely to follow the text instruction
-          num_inference_steps:  20,  // lower = faster, higher = better quality
+    console.log(`[generator] Request ${i + 1}/${count} — calling HF API...`);
+
+    let response;
+    try {
+      response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization':    `Bearer ${HF_API_TOKEN}`,
+          'Content-Type':     'application/json',
+          'x-wait-for-model': 'true',
         },
-      }),
-    });
+        body: JSON.stringify({
+          inputs: imageBase64,
+          parameters: {
+            prompt:               instruction,
+            image_guidance_scale: 1.5,
+            guidance_scale:       7.5,
+            num_inference_steps:  20,
+          },
+        }),
+      });
+    } catch (fetchErr) {
+      console.error(`[generator] fetch() threw:`, fetchErr);
+      throw new Error(`Network error reaching Hugging Face: ${fetchErr.message}`);
+    }
+
+    console.log(`[generator] HF response status: ${response.status}`);
 
     // ── Handle errors ────────────────────────────────────────────────────
     if (response.status === 429) {
@@ -63,12 +73,14 @@ async function generateImages({ image, prompt, mode, count }) {
 
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
+      console.error(`[generator] HF error body:`, body);
       throw new Error(body.error || `Hugging Face API error (${response.status}).`);
     }
 
     // ── Response is raw image bytes ───────────────────────────────────────
     const arrayBuffer = await response.arrayBuffer();
     results.push(Buffer.from(arrayBuffer).toString('base64'));
+    console.log(`[generator] Request ${i + 1}/${count} complete.`);
   }
 
   return results;
