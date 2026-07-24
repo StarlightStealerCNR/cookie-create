@@ -1,12 +1,11 @@
 /**
- * generateImages — image generation via fal.ai
+ * generateImages — image generation via Hugging Face Inference API.
  *
- * Model: fal-ai/image-to-image (Stable Diffusion img2img)
- *   - Accepts a reference image + a text prompt.
- *   - Truly async — fal.ai queues the job and returns when done,
- *     without holding an HTTP connection open for the full duration.
- *   - Works within Vercel Hobby plan's 10s function timeout because
- *     fal.ai handles the long-running work server-side.
+ * Model: timbrooks/instruct-pix2pix
+ *   - Accepts a reference image + a text instruction.
+ *   - Transforms the image according to the instruction.
+ *   - Free tier on Hugging Face Inference API.
+ *   - No timeout constraints — runs on Render's persistent server.
  *
  * @param {object} options
  * @param {Buffer} options.image   - The reference image as a raw Buffer.
@@ -15,71 +14,60 @@
  * @param {number} options.count   - Number of images to generate (1–5).
  * @returns {Promise<string[]>}    - Array of base64-encoded PNG strings (no data URI prefix).
  */
-const { fal } = require('@fal-ai/client');
-
 async function generateImages({ image, prompt, mode, count }) {
-  const FAL_KEY = process.env.FAL_KEY;
-  if (!FAL_KEY) {
-    throw new Error('FAL_KEY is not set. Add it to your environment variables.');
+  const HF_API_TOKEN = process.env.HF_API_TOKEN;
+  if (!HF_API_TOKEN) {
+    throw new Error('HF_API_TOKEN is not set. Add it to your environment variables.');
   }
 
-  // Configure fal client with API key
-  fal.config({ credentials: FAL_KEY });
+  const MODEL   = 'timbrooks/instruct-pix2pix';
+  const API_URL = `https://api-inference.huggingface.co/models/${MODEL}`;
 
-  // ── Build mode-specific prompt prefix ───────────────────────────────────
+  // ── Build mode-specific instruction prefix ───────────────────────────────
   const prefixes = {
     shape:    'Transform this cookie, keeping its exact outline and shape. New design: ',
     artstyle: 'Redraw this cookie in the same hand-drawn art style and line weight. New design: ',
     both:     'Transform this cookie, keeping its exact outline and shape, drawn in the same hand-drawn art style and line weight. New design: ',
   };
-  const fullPrompt = (prefixes[mode] || prefixes.both) + prompt;
+  const instruction = (prefixes[mode] || prefixes.both) + prompt;
 
-  // ── Convert Buffer to base64 data URI for fal.ai upload ─────────────────
-  const imageBase64 = `data:image/png;base64,${image.toString('base64')}`;
+  // ── Convert Buffer to base64 for the API payload ─────────────────────────
+  const imageBase64 = image.toString('base64');
 
-  // ── Upload reference image to fal.ai storage (required for img2img) ─────
-  let imageUrl;
-  try {
-    imageUrl = await fal.storage.upload(
-      new Blob([image], { type: 'image/png' })
-    );
-  } catch (err) {
-    throw new Error('Failed to upload reference image. Please try again.');
-  }
-
-  // ── Submit `count` jobs and collect results ──────────────────────────────
+  // ── Fire `count` sequential requests (one image per call) ────────────────
   const results = [];
 
   for (let i = 0; i < count; i++) {
-    let result;
-    try {
-      result = await fal.subscribe('fal-ai/image-to-image', {
-        input: {
-          prompt: fullPrompt,
-          image_url: imageUrl,
-          strength: 0.75,          // how much to transform vs. preserve (0=no change, 1=ignore original)
-          num_inference_steps: 28,
-          guidance_scale: 7.5,
-          num_images: 1,
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization':    `Bearer ${HF_API_TOKEN}`,
+        'Content-Type':     'application/json',
+        'x-wait-for-model': 'true', // wait if model is loading rather than returning 503
+      },
+      body: JSON.stringify({
+        inputs: imageBase64,
+        parameters: {
+          prompt:               instruction,
+          image_guidance_scale: 1.5, // how closely to follow the reference image
+          guidance_scale:       7.5, // how closely to follow the text instruction
+          num_inference_steps:  20,  // lower = faster, higher = better quality
         },
-        logs: false,
-      });
-    } catch (err) {
-      throw new Error(err.message || 'fal.ai generation failed. Please try again.');
+      }),
+    });
+
+    // ── Handle errors ────────────────────────────────────────────────────
+    if (response.status === 429) {
+      throw new Error('Hugging Face rate limit reached. Please wait a moment and try again.');
     }
 
-    // ── Fetch the output image and convert to base64 ─────────────────────
-    const outputUrl = result?.data?.images?.[0]?.url;
-    if (!outputUrl) {
-      throw new Error('No image returned from fal.ai. Please try again.');
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || `Hugging Face API error (${response.status}).`);
     }
 
-    const imgResponse = await fetch(outputUrl);
-    if (!imgResponse.ok) {
-      throw new Error('Failed to retrieve generated image. Please try again.');
-    }
-
-    const arrayBuffer = await imgResponse.arrayBuffer();
+    // ── Response is raw image bytes ───────────────────────────────────────
+    const arrayBuffer = await response.arrayBuffer();
     results.push(Buffer.from(arrayBuffer).toString('base64'));
   }
 
