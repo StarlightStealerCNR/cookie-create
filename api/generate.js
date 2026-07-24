@@ -47,7 +47,7 @@ module.exports = async function handler(req, res) {
     : fields.prompt;
   const mode = Array.isArray(fields.mode) ? fields.mode[0] : fields.mode;
   const count = Math.min(
-    5,
+    6,
     Math.max(
       1,
       parseInt(

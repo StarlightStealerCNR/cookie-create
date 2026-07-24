@@ -238,7 +238,7 @@ Implement the real image generation logic in `generator.js` using the Hugging Fa
 - `image` arrives as a `Buffer` from `multer`; convert to base64 string with `image.toString('base64')` before sending.
 - The `count` loop means `count` sequential API calls; acceptable for a low-volume tool but will be slow for large counts.
 
-**Status:** `[ ] pending`
+**Status:** `[x] done`
 
 ---
 
@@ -264,7 +264,7 @@ Write a README covering local setup and how to deploy to Vercel, so the app can 
 - Vercel provisions HTTPS automatically on all deployments.
 - `vercel dev` reads `.env.local` for secrets during local development, mirroring the production environment.
 
-**Status:** `[ ] pending`
+**Status:** `[x] done`
 
 ---
 
