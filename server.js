@@ -17,13 +17,6 @@ if (missing.length) {
   console.log('[startup] All required environment variables are present.');
 }
 
-// ── Rate limiting ──────────────────────────────────────────────────────────
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '15 m'),
-  analytics: false,
-});
-
 // ── Static files ───────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -35,11 +28,21 @@ app.post('/api/generate', async (req, res) => {
     req.socket?.remoteAddress ||
     'unknown';
 
-  const { success } = await ratelimit.limit(ip);
-  if (!success) {
-    return res.status(429).json({
-      error: 'Too many requests — please wait 15 minutes before trying again.',
+  try {
+    const ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(10, '15 m'),
+      analytics: false,
     });
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      return res.status(429).json({
+        error: 'Too many requests — please wait 15 minutes before trying again.',
+      });
+    }
+  } catch (err) {
+    console.error('[rate-limit] Failed to initialise:', err.message);
+    // Allow the request through if rate limiting is unavailable
   }
 
   // --- Parse multipart form data ---
