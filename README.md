@@ -8,7 +8,7 @@ A web app that generates cookie design ideas from a reference image and a text d
 
 - [Node.js](https://nodejs.org) v18 or higher
 - [Vercel CLI](https://vercel.com/docs/cli) — install globally with `npm install -g vercel`
-- A free [Hugging Face](https://huggingface.co) account
+- A [fal.ai](https://fal.ai) account (free tier available)
 - A free [Upstash](https://upstash.com) Redis database
 
 ---
@@ -27,14 +27,14 @@ Create a `.env.local` file in the project root with the following values:
 
 | Variable | Description | Where to find it |
 |---|---|---|
-| `HF_API_TOKEN` | Hugging Face API token (Read access) | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
+| `FAL_KEY` | fal.ai API key | [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys) |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis database REST URL | Upstash dashboard → your database → REST API |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis database REST token | Upstash dashboard → your database → REST API |
 
 Example `.env.local`:
 
 ```
-HF_API_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxx
+FAL_KEY=your_fal_key_here
 UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your_token_here
 ```
@@ -102,5 +102,5 @@ cookie-create/
 3. User enters a text description of the desired design and selects how many images to generate (1–5).
 4. The frontend sends the image, prompt, mode, and count to `/api/generate`.
 5. The serverless function rate-limits by IP, then calls `generator.js`.
-6. `generator.js` fires sequential requests to the Hugging Face `instruct-pix2pix` model and returns base64-encoded images.
+6. `generator.js` uploads the reference image to fal.ai storage, then fires sequential `fal-ai/image-to-image` jobs and returns base64-encoded images.
 7. Generated images are displayed on-page until the browser is refreshed.
