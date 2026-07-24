@@ -8,6 +8,15 @@ const generateImages = require('./generator');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ── Startup environment check ──────────────────────────────────────────────
+const REQUIRED_ENV = ['HF_API_TOKEN', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
+const missing = REQUIRED_ENV.filter(k => !process.env[k]);
+if (missing.length) {
+  console.error(`[startup] Missing environment variables: ${missing.join(', ')}`);
+} else {
+  console.log('[startup] All required environment variables are present.');
+}
+
 // ── Rate limiting ──────────────────────────────────────────────────────────
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
