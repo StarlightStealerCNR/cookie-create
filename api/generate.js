@@ -1,4 +1,4 @@
-const formidable = require("formidable");
+const { formidable } = require("formidable");
 const generateImages = require("../generator");
 const { Ratelimit } = require("@upstash/ratelimit");
 const { Redis } = require("@upstash/redis");
