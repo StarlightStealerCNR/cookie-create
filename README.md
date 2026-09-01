@@ -1,4 +1,6 @@
-# CookieCreate
+# [NONFUNCTIONAL] CookieCreate
+
+> Code and README written by IBM Bob.
 
 A web app that generates cookie design ideas from a reference image and a text description. Upload a cookie base or a finished illustration, describe what you want, and get AI-generated design concepts tailored to your shape and/or art style.
 
@@ -104,3 +106,5 @@ cookie-create/
 5. The Express server rate-limits by IP, then calls `generator.js`.
 6. `generator.js` fires sequential requests to the Hugging Face `instruct-pix2pix` model and returns base64-encoded images.
 7. Generated images are displayed on-page until the browser is refreshed.
+
+
